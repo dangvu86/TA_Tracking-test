@@ -309,3 +309,45 @@ rating1, rating2 = calculate_ratings(osc_buy, osc_sell, ma_buy, ma_sell)
 - Graceful degradation for missing indicator data
 - Progress tracking with individual stock error handling
 - Connection retry logic for cloud deployment stability
+
+## Migration History
+
+### VNMIDCAP Data Source Migration (2025-01-04)
+
+**From**: Google Sheets API → **To**: Investing.com API (via `investiny`)
+
+**Reason for Migration**:
+- Increased historical data coverage: 669 rows (2023-2025) → 2,500+ rows (2015-2025)
+- Eliminated manual Google Sheets maintenance
+- Simplified deployment (no Google Sheets credentials needed)
+- Improved reliability with direct API access
+
+**Changes Made**:
+1. Created new module: `src/investing_fetcher.py`
+   - Uses `investiny` library with investing_id='995069'
+   - 30-minute cache TTL
+   - Standard OHLCV format with Date, Open, High, Low, Close, Volume
+
+2. Updated routing in `src/data_fetcher.py`
+   - Changed VNMID/VNMIDCAP routing from Google Sheets to Investing.com
+   - No fallback (exclusive source)
+
+3. Preserved backup: `src/google_sheets_simple.py.backup`
+   - Original Google Sheets fetcher kept for reference
+   - Can be restored if needed
+
+4. Updated dependencies in `requirements.txt`
+   - Added: `investiny>=0.7.0`
+
+**Data Accuracy Verification**:
+- Compared 8 days of data (2024-12-20 to 2024-12-31)
+- Result: 100% match between Google Sheets and Investing.com
+- All OHLCV values identical (Close prices, Volume, etc.)
+
+**Testing Results**:
+- ✅ Connection test: PASSED
+- ✅ Data fetching: Working correctly
+- ✅ Local test: Successful
+- ✅ Format compatibility: No breaking changes
+
+**Deployment Status**: Ready for Streamlit Cloud deployment
